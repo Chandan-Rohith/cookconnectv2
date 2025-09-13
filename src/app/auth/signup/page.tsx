@@ -85,8 +85,9 @@ export default function SignUpPage() {
           setError('Please check your email for a confirmation link before signing in.')
         }
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
+    } catch (error) {
+      console.error('Signup error:', error)
+      setError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -108,8 +109,9 @@ export default function SignUpPage() {
         setError(error.message)
         setLoading(false)
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
+    } catch (error) {
+      console.error('Google signup error:', error)
+      setError('An unexpected error occurred during Google signup. Please try again.')
       setLoading(false)
     }
   }

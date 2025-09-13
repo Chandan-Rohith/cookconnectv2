@@ -1,7 +1,7 @@
 import Navigation from '@/components/Navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { ChefHat, Users, Heart, Star, Clock, Users2 } from 'lucide-react'
+import { ChefHat, Users, Star, Users2 } from 'lucide-react'
 import Link from 'next/link'
 
 export default function Home() {

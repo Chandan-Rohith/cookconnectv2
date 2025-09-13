@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-// import { toast } from "sonner" // Removed - not needed for now
+import { parseRecipeSlug } from "@/lib/utils"
 
 // ✅ Define Comment type (instead of any)
 type Comment = {
@@ -51,8 +51,8 @@ export default function RecipeDetailPage() {
   const fetchRecipe = useCallback(async () => {
     if (!slug) return
     try {
-      const recipeId = slug.split("-").pop()
-      if (!recipeId) {
+      const parsed = parseRecipeSlug(slug)
+      if (!parsed) {
         router.push("/recipes")
         return
       }
@@ -65,7 +65,7 @@ export default function RecipeDetailPage() {
       const { data, error } = await supabase
         .from("recipes")
         .select("*, profiles(username, full_name)")
-        .eq("id", recipeId)
+        .eq("id", parsed.id)
         .single()
 
       if (error) throw error
@@ -80,7 +80,7 @@ export default function RecipeDetailPage() {
           created_at, 
           profiles!recipe_comments_user_id_fkey(username, full_name)
         `)
-        .eq("recipe_id", recipeId)
+        .eq("recipe_id", parsed.id)
         .order("created_at", { ascending: false })
 
       // Transform the data to match our Comment type

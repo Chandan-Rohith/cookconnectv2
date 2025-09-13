@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Heart, Clock, Users, Star, UtensilsCrossed, Eye, ChefHat } from 'lucide-react'
 
 import { RecipeWithDetails } from '@/types/database'
-import { formatDuration, formatRelativeTime, getDifficultyColor } from '@/lib/utils'
+import { formatDuration, formatRelativeTime, getDifficultyColor, generateRecipeSlug } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 
@@ -81,13 +81,9 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
     return '/placeholder-recipe.svg'
   }
 
-  const getRecipeSlug = () => {
-    return `${recipe.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${recipe.id.slice(-8)}`
-  }
-
   return (
     <Card className="group hover:shadow-lg transition-all duration-200 overflow-hidden">
-      <Link href={`/recipes/${getRecipeSlug()}`}>
+      <Link href={`/recipes/${generateRecipeSlug(recipe.title, recipe.id)}`}>
         <div className="relative aspect-video overflow-hidden">
           <Image
             src={getRecipeImage()}
@@ -121,7 +117,7 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <Link href={`/recipes/${getRecipeSlug()}`}>
+            <Link href={`/recipes/${generateRecipeSlug(recipe.title, recipe.id)}`}>
               <h3 className="font-semibold text-lg leading-tight group-hover:text-orange-500 transition-colors line-clamp-2">
                 {recipe.title}
               </h3>

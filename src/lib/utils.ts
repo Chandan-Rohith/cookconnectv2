@@ -88,7 +88,7 @@ export function truncateText(text: string, maxLength: number): string {
 }
 
 export function generateRecipeSlug(title: string, id: string): string {
-  return `${slugify(title)}-${id.slice(-8)}`
+  return `${slugify(title)}-${id}`
 }
 
 export function parseRecipeSlug(slug: string): { title: string; id: string } | null {

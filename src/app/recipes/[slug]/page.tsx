@@ -12,19 +12,18 @@ import {
   Clock, 
   Users, 
   Star, 
-  Fork, 
+  UtensilsCrossed, 
   Eye,
   ChefHat,
   Play,
   MessageCircle,
   Share2,
-  Copy,
   Edit,
   Trash2,
   ArrowLeft
 } from 'lucide-react'
 import { RecipeWithDetails } from '@/types/database'
-import { formatDuration, formatRelativeTime, getDifficultyColor, extractYouTubeVideoId, generateYouTubeThumbnail } from '@/lib/utils'
+import { formatDuration, formatRelativeTime, extractYouTubeVideoId, generateYouTubeThumbnail } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 
@@ -370,7 +369,7 @@ export default function RecipeDetailPage() {
             </Button>
             
             <Button variant="outline" onClick={handleFork}>
-              <Fork className="h-4 w-4 mr-2" />
+              <UtensilsCrossed className="h-4 w-4 mr-2" />
               Fork Recipe
             </Button>
             

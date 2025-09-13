@@ -4,8 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Heart, Clock, Users, Star, UtensilsCrossed, Eye, ChefHat, Play, MessageCircle, Share2, Copy, Edit, Trash2, ArrowLeft } from 'lucide-react'
+
+import { Heart, Clock, Users, Star, UtensilsCrossed, Eye, ChefHat, Play,} from 'lucide-react'
 
 import { RecipeWithDetails } from '@/types/database'
 import { formatDuration, formatRelativeTime, getDifficultyColor, extractYouTubeVideoId, generateYouTubeThumbnail } from '@/lib/utils'

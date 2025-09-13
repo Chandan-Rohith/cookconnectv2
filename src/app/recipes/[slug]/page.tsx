@@ -8,7 +8,7 @@ import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { RecipeWithDetails } from "@/types/database"
 import { 
-  Clock, Users, ArrowLeft 
+  Clock, Users, ArrowLeft, BookmarkPlus 
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -44,6 +44,8 @@ export default function RecipeDetailPage() {
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState("")
   const [loading, setLoading] = useState(true)
+  const [collections, setCollections] = useState<Array<{id: string, name: string}>>([])
+  const [showCollectionModal, setShowCollectionModal] = useState(false)
 
   // ✅ Safe slug extraction
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug ?? ""
@@ -118,6 +120,50 @@ export default function RecipeDetailPage() {
       fetchRecipe()
     }
   }, [slug, fetchRecipe])
+
+  const fetchUserCollections = async () => {
+    if (!user) return
+    
+    try {
+      const { data, error } = await supabase
+        .from('recipe_collections')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .order('name')
+
+      if (error) throw error
+      setCollections(data || [])
+    } catch (error) {
+      console.error('Error fetching collections:', error)
+    }
+  }
+
+  const addToCollection = async (collectionId: string) => {
+    if (!recipe || !user) return
+
+    try {
+      const { error } = await supabase
+        .from('collection_recipes')
+        .insert({
+          collection_id: collectionId,
+          recipe_id: recipe.id
+        })
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          alert('Recipe is already in this collection!')
+          return
+        }
+        throw error
+      }
+
+      alert('Recipe added to collection successfully!')
+      setShowCollectionModal(false)
+    } catch (error) {
+      console.error('Error adding to collection:', error)
+      alert('Error adding recipe to collection')
+    }
+  }
 
   // Early return after all hooks
   if (!slug) {
@@ -213,6 +259,23 @@ export default function RecipeDetailPage() {
         <div className="flex items-center gap-1"><Users size={16}/> {recipe.servings} servings</div>
       </div>
 
+      {/* Action Buttons */}
+      {user && (
+        <div className="flex gap-3">
+          <Button 
+            onClick={() => {
+              fetchUserCollections()
+              setShowCollectionModal(true)
+            }}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <BookmarkPlus className="h-4 w-4" />
+            Add to Collection
+          </Button>
+        </div>
+      )}
+
       {/* Description */}
       <p className="text-gray-700">{recipe.description}</p>
 
@@ -285,6 +348,54 @@ export default function RecipeDetailPage() {
           <p className="text-gray-500">No comments yet. Be the first!</p>
         )}
       </div>
+
+      {/* Add to Collection Modal */}
+      {showCollectionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">Add to Collection</h2>
+              
+              {collections.length > 0 ? (
+                <div className="space-y-2">
+                  {collections.map((collection) => (
+                    <div
+                      key={collection.id}
+                      className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                      onClick={() => addToCollection(collection.id)}
+                    >
+                      <p className="font-medium">{collection.name}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-gray-600 mb-4">You don&apos;t have any collections yet.</p>
+                  <Button 
+                    onClick={() => {
+                      setShowCollectionModal(false)
+                      router.push('/collections')
+                    }}
+                    variant="outline"
+                  >
+                    Create Collection
+                  </Button>
+                </div>
+              )}
+              
+              <div className="flex gap-3 mt-6">
+                <Button 
+                  onClick={() => setShowCollectionModal(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

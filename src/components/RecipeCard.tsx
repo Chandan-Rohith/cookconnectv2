@@ -88,7 +88,7 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
     try {
       // First, try to find or create a "Saved Recipes" collection
       const { data: collections, error: fetchError } = await supabase
-        .from('collections')
+        .from('recipe_collections')
         .select('id')
         .eq('user_id', user.id)
         .eq('name', 'Saved Recipes')
@@ -99,7 +99,7 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
       if (fetchError && fetchError.code === 'PGRST116') {
         // Collection doesn't exist, create it
         const { data: newCollection, error: createError } = await supabase
-          .from('collections')
+          .from('recipe_collections')
           .insert({
             name: 'Saved Recipes',
             description: 'Automatically saved recipes',

@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { Database } from '@/types/database'
 
 export default async function CategoriesPage() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: categories, error } = await supabase
     .from('categories')
     .select('*')

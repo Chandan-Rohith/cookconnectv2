@@ -41,12 +41,6 @@ export default function Navigation() {
             >
               Browse Recipes
             </Link>
-            <Link 
-              href="/categories" 
-              className="text-gray-700 hover:text-orange-500 transition-colors"
-            >
-              Categories
-            </Link>
             {user && (
               <Link 
                 href="/create" 
@@ -119,13 +113,6 @@ export default function Navigation() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Browse Recipes
-              </Link>
-              <Link 
-                href="/categories" 
-                className="text-gray-700 hover:text-orange-500 transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Categories
               </Link>
               {user && (
                 <>

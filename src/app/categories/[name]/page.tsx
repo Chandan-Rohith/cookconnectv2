@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { Database } from '@/types/database'
 
@@ -7,7 +7,7 @@ interface CategoryPageProps {
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data: category, error } = await supabase
     .from('categories')
     .select('*')

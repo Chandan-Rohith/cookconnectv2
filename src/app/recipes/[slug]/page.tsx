@@ -5,11 +5,9 @@ import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { RecipeWithDetails } from "@/types/database"
 import { 
-  Heart, Clock, Users, Star, UtensilsCrossed, Eye, ChefHat, Play, 
-  MessageCircle, Share2, Copy, Edit, Trash2, ArrowLeft 
+  Clock, Users, UtensilsCrossed, ArrowLeft 
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 // import { toast } from "sonner" // Removed - not needed for now
 
@@ -22,6 +20,14 @@ type Comment = {
     username: string
     full_name?: string
   }
+}
+
+// ✅ Define ingredient type
+type Ingredient = {
+  id: string
+  name: string
+  amount: string
+  unit: string | null
 }
 
 export default function RecipeDetailPage() {
@@ -75,13 +81,13 @@ export default function RecipeDetailPage() {
         .order("created_at", { ascending: false })
 
       // Transform the data to match our Comment type
-      const transformedComments = commentData?.map((comment: any) => ({
+      const transformedComments = commentData?.map((comment) => ({
         id: comment.id,
         content: comment.content,
         created_at: comment.created_at,
         author: {
-          username: comment.profiles?.username || 'Unknown',
-          full_name: comment.profiles?.full_name
+          username: comment.profiles?.[0]?.username || 'Unknown',
+          full_name: comment.profiles?.[0]?.full_name
         }
       })) || []
 
@@ -108,29 +114,38 @@ export default function RecipeDetailPage() {
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newComment.trim() || !recipe) return
+    if (!newComment.trim() || !recipe || !user) return
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("recipe_comments")
         .insert([
           {
             content: newComment,
             recipe_id: recipe.id,
-            author_id: user?.id,
+            user_id: user.id,
           },
         ])
-        .select("id, content, created_at, author:profiles(username, full_name)")
-        .single()
 
       if (error) throw error
 
-      setComments([data, ...comments])
+      // Create a new comment locally
+      const newCommentData: Comment = {
+        id: Date.now().toString(), // Temporary ID
+        content: newComment,
+        created_at: new Date().toISOString(),
+        author: {
+          username: user.email || 'Unknown',
+          full_name: undefined
+        }
+      }
+
+      setComments([newCommentData, ...comments])
       setNewComment("")
-      toast.success("Comment added successfully!")
+      // Refresh comments to get the real data
+      fetchRecipe()
     } catch (error) {
       console.error("Error adding comment:", error)
-      toast.error("Failed to add comment.")
     }
   }
 
@@ -148,13 +163,13 @@ export default function RecipeDetailPage() {
 
       {/* Recipe Title */}
       <h1 className="text-3xl font-bold">{recipe.title}</h1>
-      <p className="text-gray-600">By {recipe.profiles?.username || "Unknown"}</p>
+      <p className="text-gray-600">By {recipe.author?.username || "Unknown"}</p>
 
       {/* Metadata */}
       <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-        <div className="flex items-center gap-1"><Clock size={16}/> {recipe.cooking_time} mins</div>
+        <div className="flex items-center gap-1"><Clock size={16}/> {recipe.cook_time} mins</div>
         <div className="flex items-center gap-1"><Users size={16}/> {recipe.servings} servings</div>
-        <div className="flex items-center gap-1"><UtensilsCrossed size={16}/> {recipe.cuisine}</div>
+        <div className="flex items-center gap-1"><UtensilsCrossed size={16}/> {recipe.category?.name}</div>
       </div>
 
       {/* Description */}
@@ -164,8 +179,10 @@ export default function RecipeDetailPage() {
       <div>
         <h2 className="text-xl font-semibold mb-2">Ingredients</h2>
         <ul className="list-disc pl-5 space-y-1">
-          {recipe.ingredients?.map((ing: string, idx: number) => (
-            <li key={idx}>{ing}</li>
+          {recipe.ingredients?.map((ingredient: Ingredient, idx: number) => (
+            <li key={idx}>
+              {ingredient.amount} {ingredient.unit} {ingredient.name}
+            </li>
           ))}
         </ul>
       </div>
@@ -174,8 +191,8 @@ export default function RecipeDetailPage() {
       <div>
         <h2 className="text-xl font-semibold mb-2">Instructions</h2>
         <ol className="list-decimal pl-5 space-y-1">
-          {recipe.instructions?.map((step: string, idx: number) => (
-            <li key={idx}>{step}</li>
+          {recipe.instructions?.split('\n').filter(step => step.trim()).map((step: string, idx: number) => (
+            <li key={idx}>{step.trim()}</li>
           ))}
         </ol>
       </div>

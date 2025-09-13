@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Navigation from '@/components/Navigation'
 import RecipeCard from '@/components/RecipeCard'
 import { Button } from '@/components/ui/button'
@@ -8,13 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { 
   Search, 
-  Filter, 
   Grid, 
   List,
-  ChefHat,
-  Star,
-  Clock,
-  Users
+  ChefHat
 } from 'lucide-react'
 import { RecipeWithDetails } from '@/types/database'
 import { createClient } from '@/lib/supabase/client'
@@ -37,12 +33,7 @@ export default function RecipesPage() {
   const [categories, setCategories] = useState<{ id: string; name: string; icon?: string }[]>([])
   const supabase = createClient()
 
-  useEffect(() => {
-    fetchRecipes()
-    fetchCategories()
-  }, [searchQuery, selectedCategory, selectedDifficulty, dietaryFilters, sortBy])
-
-  const fetchRecipes = async () => {
+  const fetchRecipes = useCallback(async () => {
     setLoading(true)
     try {
       let query = supabase
@@ -117,9 +108,9 @@ export default function RecipesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchQuery, selectedCategory, selectedDifficulty, dietaryFilters, sortBy, supabase])
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -134,7 +125,12 @@ export default function RecipesPage() {
     } catch (error) {
       console.error('Error fetching categories:', error)
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    fetchRecipes()
+    fetchCategories()
+  }, [fetchRecipes, fetchCategories])
 
   const handleDietaryFilterChange = (filter: keyof typeof dietaryFilters) => {
     setDietaryFilters(prev => ({

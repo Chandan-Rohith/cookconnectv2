@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Navigation from '@/components/Navigation'
@@ -11,11 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { 
   Plus, 
   Trash2, 
-   
- 
   ChefHat,
-  Save,
- 
+  Save
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -71,15 +68,7 @@ export default function CreateRecipePage() {
   })
   const supabase = createClient()
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/signin')
-      return
-    }
-    fetchCategories()
-  }, [user, router])
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('categories')
@@ -94,7 +83,15 @@ export default function CreateRecipePage() {
     } catch (error) {
       console.error('Error fetching categories:', error)
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/signin')
+      return
+    }
+    fetchCategories()
+  }, [user, router, fetchCategories])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
@@ -349,7 +346,7 @@ export default function CreateRecipePage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {ingredients.map((ingredient, index) => (
+                {ingredients.map((ingredient) => (
                   <div key={ingredient.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">

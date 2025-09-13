@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { Database } from '@/types/database'
@@ -22,6 +22,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+
+  const fetchProfile = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (error) {
+        console.error('Error fetching profile:', error)
+        return
+      }
+
+      setProfile(data)
+    } catch (error) {
+      console.error('Error fetching profile:', error)
+    }
+  }, [supabase])
 
   useEffect(() => {
     // Get initial session
@@ -54,26 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, [])
-
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (error) {
-        console.error('Error fetching profile:', error)
-        return
-      }
-
-      setProfile(data)
-    } catch (error) {
-      console.error('Error fetching profile:', error)
-    }
-  }
+  }, [fetchProfile, supabase.auth])
 
   const refreshProfile = async () => {
     if (user) {

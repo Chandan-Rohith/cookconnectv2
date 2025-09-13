@@ -30,18 +30,54 @@ export default function AuthCallbackPage() {
 
           if (profileError && profileError.code === 'PGRST116') {
             // Profile doesn't exist, create one
+            console.log('Creating new profile for user:', data.session.user.id)
+            
+            // Generate a unique username
+            const baseUsername = data.session.user.email?.split('@')[0] || 'user'
+            let username = baseUsername
+            let counter = 1
+            
+            // Check for username conflicts and append number if needed
+            while (true) {
+              const { data: existingUser } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('username', username)
+                .single()
+                
+              if (!existingUser) break // Username is available
+              username = `${baseUsername}${counter}`
+              counter++
+              
+              // Prevent infinite loop
+              if (counter > 100) {
+                username = `${baseUsername}_${Date.now()}`
+                break
+              }
+            }
+            
             const { error: insertError } = await supabase
               .from('profiles')
               .insert({
                 id: data.session.user.id,
-                username: data.session.user.email?.split('@')[0] || 'user',
+                username: username,
                 full_name: data.session.user.user_metadata?.full_name || '',
                 avatar_url: data.session.user.user_metadata?.avatar_url || null,
               })
 
             if (insertError) {
               console.error('Error creating profile:', insertError)
+              // Continue anyway, don't block the user
+            } else {
+              console.log('Profile created successfully with username:', username)
             }
+          } else if (profileError) {
+            // Some other error occurred
+            console.error('Error checking profile:', profileError)
+            // Continue anyway, don't block the user
+          } else if (profile) {
+            // Profile exists, log for debugging
+            console.log('Existing profile found:', profile.username)
           }
 
           router.push('/')

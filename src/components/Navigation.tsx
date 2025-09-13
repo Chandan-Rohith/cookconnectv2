@@ -6,8 +6,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { 
   ChefHat, 
-  Search, 
-  Plus, 
   User, 
   LogOut, 
   Menu, 

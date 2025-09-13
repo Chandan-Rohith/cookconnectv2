@@ -256,10 +256,10 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
               onClick={handleAddToCollection}
               disabled={loading}
               className="flex items-center gap-1 text-sm text-gray-500 hover:text-orange-500 transition-colors disabled:opacity-50"
-              title="Save recipe to collection"
+              title="Add recipe to collection"
             >
               <UtensilsCrossed className="h-4 w-4" />
-              <span>Save</span>
+              <span>Collection</span>
             </button>
 
             {recipe.average_rating && (

@@ -18,6 +18,7 @@ import {
   Save
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { generateRecipeSlug } from '@/lib/utils'
 
 interface Ingredient {
   id: string
@@ -171,7 +172,7 @@ export default function CreateRecipePage() {
       }
 
       // Redirect to the recipe page
-      const recipeSlug = `${formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${recipe.id.slice(-8)}`
+      const recipeSlug = generateRecipeSlug(formData.title, recipe.id)
       router.push(`/recipes/${recipeSlug}`)
     } catch (error) {
       console.error('Error creating recipe:', error)

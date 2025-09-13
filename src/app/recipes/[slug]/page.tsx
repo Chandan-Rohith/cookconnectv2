@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { parseRecipeSlug } from "@/lib/utils"
+import { useAuth } from "@/contexts/AuthContext"
 
 // ✅ Define Comment type (instead of any)
 type Comment = {
@@ -37,12 +38,12 @@ export default function RecipeDetailPage() {
   const params = useParams()
   const router = useRouter()
   const supabase = createClient()
+  const { user } = useAuth() // Use AuthContext instead of local state
 
   const [recipe, setRecipe] = useState<RecipeWithDetails | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState("")
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null)
 
   // ✅ Safe slug extraction
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug ?? ""
@@ -60,19 +61,24 @@ export default function RecipeDetailPage() {
         return
       }
 
-      // ✅ Get current user
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      // ✅ Get current user (now using AuthContext)
+      console.log('Current user from AuthContext:', user)
 
       console.log('Looking up recipe with ID:', parsed.id)
-      // ✅ Fetch recipe details
+      // ✅ Fetch recipe details with ingredients
       const { data, error } = await supabase
         .from("recipes")
-        .select("*, profiles(username, full_name)")
+        .select(`
+          *, 
+          profiles(username, full_name),
+          ingredients:recipe_ingredients(*)
+        `)
         .eq("id", parsed.id)
         .single()
 
       if (error) throw error
+      console.log('Recipe data received:', data)
+      console.log('Ingredients:', data?.ingredients)
       setRecipe(data)
 
       // ✅ Fetch comments
@@ -105,7 +111,7 @@ export default function RecipeDetailPage() {
     } finally {
       setLoading(false)
     }
-  }, [slug, supabase, router])
+  }, [slug, supabase, router, user])
 
   useEffect(() => {
     if (slug) {
@@ -121,10 +127,31 @@ export default function RecipeDetailPage() {
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newComment.trim() || !recipe || !user) return
+    
+    console.log('Comment submit triggered')
+    console.log('User:', user)
+    console.log('Recipe:', recipe?.id)
+    console.log('Comment content:', newComment.trim())
+    
+    if (!newComment.trim()) {
+      console.log('No comment content')
+      return
+    }
+    
+    if (!recipe) {
+      console.log('No recipe found')
+      return
+    }
+    
+    if (!user) {
+      console.log('User not authenticated')
+      alert('Please sign in to post comments')
+      return
+    }
 
     try {
-      const { error } = await supabase
+      console.log('Attempting to insert comment...')
+      const { data, error } = await supabase
         .from("recipe_comments")
         .insert([
           {
@@ -133,9 +160,17 @@ export default function RecipeDetailPage() {
             user_id: user.id,
           },
         ])
+        .select()
 
-      if (error) throw error
+      console.log('Insert result:', { data, error })
 
+      if (error) {
+        console.error('Database error:', error)
+        alert('Failed to post comment: ' + error.message)
+        throw error
+      }
+
+      console.log('Comment posted successfully')
       // Create a new comment locally
       const newCommentData: Comment = {
         id: Date.now().toString(), // Temporary ID
@@ -184,13 +219,17 @@ export default function RecipeDetailPage() {
       {/* Ingredients */}
       <div>
         <h2 className="text-xl font-semibold mb-2">Ingredients</h2>
-        <ul className="list-disc pl-5 space-y-1">
-          {recipe.ingredients?.map((ingredient: Ingredient, idx: number) => (
-            <li key={idx}>
-              {ingredient.amount} {ingredient.unit} {ingredient.name}
-            </li>
-          ))}
-        </ul>
+        {recipe.ingredients && recipe.ingredients.length > 0 ? (
+          <ul className="list-disc pl-5 space-y-1">
+            {recipe.ingredients.map((ingredient: Ingredient, idx: number) => (
+              <li key={ingredient.id || idx}>
+                {ingredient.amount} {ingredient.unit} {ingredient.name}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500 italic">No ingredients listed for this recipe.</p>
+        )}
       </div>
 
       {/* Instructions */}
@@ -206,14 +245,29 @@ export default function RecipeDetailPage() {
       {/* Comments Section */}
       <div>
         <h2 className="text-xl font-semibold mb-2">Comments</h2>
-        <form onSubmit={handleCommentSubmit} className="space-y-2 mb-4">
-          <Textarea
-            placeholder="Add a comment..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-          />
-          <Button type="submit">Post Comment</Button>
-        </form>
+        
+        {user ? (
+          <form onSubmit={handleCommentSubmit} className="space-y-2 mb-4">
+            <Textarea
+              placeholder="Add a comment..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+            />
+            <Button type="submit" disabled={!newComment.trim()}>
+              Post Comment
+            </Button>
+          </form>
+        ) : (
+          <div className="mb-4 p-4 bg-gray-100 rounded-lg">
+            <p className="text-gray-600 mb-2">Please sign in to post comments</p>
+            <Button 
+              onClick={() => router.push('/auth/signin')}
+              variant="outline"
+            >
+              Sign In
+            </Button>
+          </div>
+        )}
 
         {comments.length > 0 ? (
           <div className="space-y-4">

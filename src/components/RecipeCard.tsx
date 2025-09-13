@@ -22,6 +22,7 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
   const { user } = useAuth()
   const [isLiked, setIsLiked] = useState(recipe.is_liked || false)
   const [likeCount, setLikeCount] = useState(recipe.like_count)
+  const [forkCount, setForkCount] = useState(recipe.fork_count || 0)
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
 
@@ -68,6 +69,75 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
       onLike?.()
     } catch (error) {
       console.error('Error toggling like:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFork = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (!user) {
+      // Redirect to sign in
+      window.location.href = '/auth/signin'
+      return
+    }
+
+    setLoading(true)
+    
+    try {
+      // Create a fork (copy) of the recipe
+      const { data: forkedRecipe, error } = await supabase
+        .from('recipes')
+        .insert({
+          title: `${recipe.title} (Fork)`,
+          description: recipe.description,
+          instructions: recipe.instructions,
+          prep_time: recipe.prep_time,
+          cook_time: recipe.cook_time,
+          servings: recipe.servings,
+          difficulty: recipe.difficulty,
+          image_url: recipe.image_url,
+          is_public: false, // Start as private so user can edit
+          is_vegetarian: recipe.is_vegetarian,
+          is_vegan: recipe.is_vegan,
+          is_gluten_free: recipe.is_gluten_free,
+          is_dairy_free: recipe.is_dairy_free,
+          is_nut_free: recipe.is_nut_free,
+          author_id: user.id,
+          original_recipe_id: recipe.id, // This will trigger the fork count update
+          category_id: recipe.category_id
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Copy ingredients if they exist
+      if (recipe.ingredients && recipe.ingredients.length > 0) {
+        const ingredientsToInsert = recipe.ingredients.map((ingredient: { name: string; amount: string; unit: string | null }, index: number) => ({
+          recipe_id: forkedRecipe.id,
+          name: ingredient.name,
+          amount: ingredient.amount,
+          unit: ingredient.unit,
+          order_index: index
+        }))
+
+        await supabase
+          .from('recipe_ingredients')
+          .insert(ingredientsToInsert)
+      }
+
+      // Update local fork count
+      setForkCount(prev => prev + 1)
+      
+      // Redirect to edit the forked recipe
+      window.location.href = `/recipes/${generateRecipeSlug(forkedRecipe.title, forkedRecipe.id)}`
+      
+    } catch (error) {
+      console.error('Error forking recipe:', error)
+      alert('Failed to fork recipe. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -182,12 +252,15 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
               <span>{likeCount}</span>
             </button>
             
-            {recipe.fork_count > 0 && (
-              <div className="flex items-center gap-1 text-sm text-gray-500">
-                <UtensilsCrossed className="h-4 w-4" />
-                <span>{recipe.fork_count}</span>
-              </div>
-            )}
+            <button
+              onClick={handleFork}
+              disabled={loading}
+              className="flex items-center gap-1 text-sm text-gray-500 hover:text-orange-500 transition-colors disabled:opacity-50"
+              title="Fork this recipe (create your own copy to edit)"
+            >
+              <UtensilsCrossed className="h-4 w-4" />
+              <span>{forkCount}</span>
+            </button>
 
             {recipe.average_rating && (
               <div className="flex items-center gap-1 text-sm text-gray-500">

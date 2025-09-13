@@ -11,13 +11,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { 
   Plus, 
   Trash2, 
-  Upload, 
-  Clock, 
-  Users, 
+   
+ 
   ChefHat,
   Save,
-  Eye,
-  EyeOff
+ 
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -52,7 +50,7 @@ export default function CreateRecipePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
-  const [categories, setCategories] = useState<any[]>([])
+  const [categories, setCategories] = useState<{ id: string; name: string; icon?: string }[]>([])
   const [formData, setFormData] = useState<RecipeFormData>({
     title: '',
     description: '',

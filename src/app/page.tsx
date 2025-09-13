@@ -46,7 +46,7 @@ export default function Home() {
               Why Choose RecipeShare?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              We've built the ultimate platform for recipe sharing with features that make cooking and sharing fun.
+              We&apos;ve built the ultimate platform for recipe sharing with features that make cooking and sharing fun.
             </p>
           </div>
           
@@ -88,7 +88,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-gray-600">
-                  Filter by allergies, dietary preferences, ratings, and more to find exactly what you're looking for.
+                  Filter by allergies, dietary preferences, ratings, and more to find exactly what you&apos;re looking for.
                 </CardDescription>
               </CardContent>
             </Card>

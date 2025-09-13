@@ -34,7 +34,7 @@ export default function RecipesPage() {
   })
   const [sortBy, setSortBy] = useState('newest')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [categories, setCategories] = useState<any[]>([])
+  const [categories, setCategories] = useState<{ id: string; name: string; icon?: string }[]>([])
   const supabase = createClient()
 
   useEffect(() => {

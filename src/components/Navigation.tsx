@@ -41,12 +41,6 @@ export default function Navigation() {
             >
               Browse Recipes
             </Link>
-            <Link 
-              href="/categories" 
-              className="text-gray-700 hover:text-orange-500 transition-colors"
-            >
-              Categories
-            </Link>
             {user && (
               <Link 
                 href="/create" 

@@ -83,7 +83,7 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-200 overflow-hidden">
-      <Link href={`/recipes/${generateRecipeSlug(recipe.title, recipe.id)}`}>
+      <Link href={`/recipes/${generateRecipeSlug(recipe.title, recipe.id)}`} onClick={() => console.log('Clicking recipe card:', recipe.title, 'ID:', recipe.id, 'Generated slug:', generateRecipeSlug(recipe.title, recipe.id))}>
         <div className="relative aspect-video overflow-hidden">
           <Image
             src={getRecipeImage()}

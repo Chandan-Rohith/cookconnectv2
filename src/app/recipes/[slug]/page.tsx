@@ -51,8 +51,11 @@ export default function RecipeDetailPage() {
   const fetchRecipe = useCallback(async () => {
     if (!slug) return
     try {
+      console.log('Fetching recipe with slug:', slug)
       const parsed = parseRecipeSlug(slug)
+      console.log('Parsed slug result:', parsed)
       if (!parsed) {
+        console.log('Failed to parse slug, redirecting to recipes page')
         router.push("/recipes")
         return
       }
@@ -61,6 +64,7 @@ export default function RecipeDetailPage() {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
 
+      console.log('Looking up recipe with ID:', parsed.id)
       // ✅ Fetch recipe details
       const { data, error } = await supabase
         .from("recipes")

@@ -88,15 +88,16 @@ export function truncateText(text: string, maxLength: number): string {
 }
 
 export function generateRecipeSlug(title: string, id: string): string {
-  return `${slugify(title)}-${id}`
+  return `${id}-${slugify(title)}`
 }
 
 export function parseRecipeSlug(slug: string): { title: string; id: string } | null {
-  const parts = slug.split('-')
-  if (parts.length < 2) return null
+  // UUID is at the beginning, format: "uuid-title-with-hyphens"
+  // UUIDs are 36 characters long (including hyphens)
+  if (slug.length < 36) return null
   
-  const id = parts[parts.length - 1]
-  const title = parts.slice(0, -1).join('-')
+  const id = slug.substring(0, 36) // Extract the first 36 characters (UUID)
+  const title = slug.substring(37) // Everything after "uuid-"
   
   return { title, id }
 }

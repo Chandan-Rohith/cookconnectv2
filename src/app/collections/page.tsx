@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import Navigation from '@/components/Navigation'
 import RecipeCard from '@/components/RecipeCard'
+import CollectionRecipeCard from '@/components/CollectionRecipeCard'
 import { createClient } from '@/lib/supabase/client'
 import { RecipeWithDetails } from '@/types/database'
 import { BookOpen, Plus, Utensils, UtensilsCrossed, Trash2, FolderOpen } from 'lucide-react'
@@ -364,8 +365,16 @@ export default function CollectionsPage() {
             <div className="p-6">
               {collectionRecipes.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* CollectionRecipeCard includes edit functionality that creates personal copies */}
+                  {/* Original recipes remain unchanged when edited through collections */}
                   {collectionRecipes.map((recipe) => (
-                    <RecipeCard key={recipe.id} recipe={recipe} />
+                    <CollectionRecipeCard 
+                      key={recipe.id} 
+                      recipe={recipe} 
+                      collectionId={selectedCollection.id}
+                      onRemove={() => fetchCollectionRecipes(selectedCollection.id)}
+                      onEdit={() => fetchCollectionRecipes(selectedCollection.id)}
+                    />
                   ))}
                 </div>
               ) : (

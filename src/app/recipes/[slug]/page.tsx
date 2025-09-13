@@ -68,6 +68,7 @@ export default function RecipeDetailPage() {
 
       console.log('Looking up recipe with ID:', parsed.id)
       // ✅ Fetch recipe details with ingredients
+      // Include access check for private recipes (user must be author or recipe must be public)
       const { data, error } = await supabase
         .from("recipes")
         .select(`
@@ -76,11 +77,27 @@ export default function RecipeDetailPage() {
           ingredients:recipe_ingredients(*)
         `)
         .eq("id", parsed.id)
+        .or(`is_public.eq.true,author_id.eq.${user?.id || 'null'}`)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching recipe:', error)
+        if (error.code === 'PGRST116') {
+          // No rows returned - recipe not found or no access
+          console.log('Recipe not found or access denied')
+        }
+        throw error
+      }
       console.log('Recipe data received:', data)
       console.log('Ingredients:', data?.ingredients)
+      
+      // Check if recipe is private and user has access
+      if (!data.is_public && data.author_id !== user?.id) {
+        console.log('Recipe is private and user is not the author')
+        router.push("/recipes")
+        return
+      }
+      
       setRecipe(data)
 
       // ✅ Fetch comments

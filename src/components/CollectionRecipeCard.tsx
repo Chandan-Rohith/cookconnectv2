@@ -10,17 +10,7 @@ import { Clock, Users, Heart, UtensilsCrossed, Edit, Trash2 } from 'lucide-react
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-
-// Generate recipe slug function
-const generateRecipeSlug = (title: string, id: string): string => {
-  const slug = title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .trim()
-  return `${slug}-${id}`
-}
+import { generateRecipeSlug } from '@/lib/utils'
 
 interface CollectionRecipeCardProps {
   recipe: RecipeWithDetails
@@ -185,7 +175,7 @@ export default function CollectionRecipeCard({
 
       setShowEditModal(false)
       onEdit() // Refresh the collection view
-      alert('Recipe edited and saved as your personal copy!')
+      alert(`Recipe edited and saved as your personal copy! New recipe ID: ${newRecipeData.id}`)
     } catch (error) {
       console.error('Error saving edited recipe:', error)
       alert('Error saving edited recipe')
@@ -256,7 +246,11 @@ export default function CollectionRecipeCard({
         <div className="p-4">
           <h3 
             className="font-semibold text-lg text-gray-900 mb-2 cursor-pointer hover:text-orange-600 transition-colors"
-            onClick={() => router.push(`/recipes/${generateRecipeSlug(recipe.title, recipe.id)}`)}
+            onClick={() => {
+              const slug = generateRecipeSlug(recipe.title, recipe.id)
+              console.log('Navigating to recipe:', { title: recipe.title, id: recipe.id, slug })
+              router.push(`/recipes/${slug}`)
+            }}
           >
             {recipe.title}
           </h3>

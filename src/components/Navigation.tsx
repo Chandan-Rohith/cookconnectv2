@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 
 export default function Navigation() {
-  const { user, profile, signOut } = useAuth()
+  const { user, signOut } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
@@ -65,7 +65,7 @@ export default function Navigation() {
                     <BookOpen className="h-5 w-5" />
                   </Button>
                 </Link>
-                <Link href={`/profile/${profile?.username || user.id}`}>
+                <Link href={`/profile/${user.id}`}>
                   <Button variant="ghost" size="icon">
                     <User className="h-5 w-5" />
                   </Button>
@@ -138,7 +138,7 @@ export default function Navigation() {
                     My Collections
                   </Link>
                   <Link 
-                    href={`/profile/${profile?.username || user.id}`}
+                    href={`/profile/${user.id}`}
                     className="text-gray-700 hover:text-orange-500 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

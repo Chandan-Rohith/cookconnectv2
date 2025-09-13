@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 import { RecipeWithDetails } from "@/types/database"
 import { 
@@ -73,7 +74,7 @@ export default function RecipeDetailPage() {
         .from("recipes")
         .select(`
           *, 
-          profiles(username, full_name),
+          profiles(id, username, full_name),
           ingredients:recipe_ingredients(*)
         `)
         .eq("id", parsed.id)
@@ -268,7 +269,19 @@ export default function RecipeDetailPage() {
 
       {/* Recipe Title */}
       <h1 className="text-3xl font-bold">{recipe.title}</h1>
-      <p className="text-gray-600">By {recipe.author?.username || "Unknown"}</p>
+      <p className="text-gray-600">
+        By{" "}
+        {recipe.author?.id ? (
+          <Link 
+            href={`/profile/${recipe.author.id}`}
+            className="text-orange-500 hover:text-orange-600 font-medium transition-colors"
+          >
+            {recipe.author.username || "Unknown"}
+          </Link>
+        ) : (
+          <span>{recipe.author?.username || "Unknown"}</span>
+        )}
+      </p>
 
       {/* Metadata */}
       <div className="flex flex-wrap gap-4 text-sm text-gray-500">

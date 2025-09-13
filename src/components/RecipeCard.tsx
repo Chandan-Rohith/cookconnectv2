@@ -220,16 +220,6 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
           </div>
         </div>
 
-        {recipe.category && (
-          <div className="mt-3">
-            <Link 
-              href={`/categories/${recipe.category.name.toLowerCase()}`}
-              className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full hover:bg-orange-100 hover:text-orange-700 transition-colors"
-            >
-              {recipe.category.icon} {recipe.category.name}
-            </Link>
-          </div>
-        )}
       </CardContent>
     </Card>
   )

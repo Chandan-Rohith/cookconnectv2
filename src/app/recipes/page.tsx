@@ -19,7 +19,6 @@ export default function RecipesPage() {
   const [recipes, setRecipes] = useState<RecipeWithDetails[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedDifficulty, setSelectedDifficulty] = useState('')
   const [dietaryFilters, setDietaryFilters] = useState({
     vegetarian: false,
@@ -30,7 +29,6 @@ export default function RecipesPage() {
   })
   const [sortBy, setSortBy] = useState('newest')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [categories, setCategories] = useState<{ id: string; name: string; icon?: string }[]>([])
   const supabase = createClient()
 
   const fetchRecipes = useCallback(async () => {
@@ -50,11 +48,6 @@ export default function RecipesPage() {
       // Apply search filter
       if (searchQuery) {
         query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
-      }
-
-      // Apply category filter
-      if (selectedCategory) {
-        query = query.eq('category_id', selectedCategory)
       }
 
       // Apply difficulty filter
@@ -108,29 +101,11 @@ export default function RecipesPage() {
     } finally {
       setLoading(false)
     }
-  }, [searchQuery, selectedCategory, selectedDifficulty, dietaryFilters, sortBy, supabase])
-
-  const fetchCategories = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name')
-
-      if (error) {
-        console.error('Error fetching categories:', error)
-      } else {
-        setCategories(data || [])
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error)
-    }
-  }, [supabase])
+  }, [searchQuery, selectedDifficulty, dietaryFilters, sortBy, supabase])
 
   useEffect(() => {
     fetchRecipes()
-    fetchCategories()
-  }, [fetchRecipes, fetchCategories])
+  }, [fetchRecipes])
 
   const handleDietaryFilterChange = (filter: keyof typeof dietaryFilters) => {
     setDietaryFilters(prev => ({
@@ -141,7 +116,6 @@ export default function RecipesPage() {
 
   const clearFilters = () => {
     setSearchQuery('')
-    setSelectedCategory('')
     setSelectedDifficulty('')
     setDietaryFilters({
       vegetarian: false,
@@ -180,22 +154,6 @@ export default function RecipesPage() {
                       className="pl-10"
                     />
                   </div>
-                </div>
-
-                {/* Category Filter */}
-                <div className="lg:w-48">
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
-                    <option value="">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.icon} {category.name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
 
                 {/* Difficulty Filter */}

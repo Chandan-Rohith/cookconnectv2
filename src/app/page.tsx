@@ -175,7 +175,6 @@ export default function Home() {
               <h3 className="font-semibold mb-4">Platform</h3>
               <ul className="space-y-2 text-gray-400">
                 <li><Link href="/recipes" className="hover:text-white">Browse Recipes</Link></li>
-                <li><Link href="/categories" className="hover:text-white">Categories</Link></li>
                 <li><Link href="/create" className="hover:text-white">Create Recipe</Link></li>
               </ul>
             </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Navigation from '@/components/Navigation'
@@ -39,7 +39,6 @@ interface RecipeFormData {
   isGlutenFree: boolean
   isDairyFree: boolean
   isNutFree: boolean
-  categoryId: string
 }
 
 export default function CreateRecipePage() {
@@ -47,7 +46,6 @@ export default function CreateRecipePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
-  const [categories, setCategories] = useState<{ id: string; name: string; icon?: string }[]>([])
   const [formData, setFormData] = useState<RecipeFormData>({
     title: '',
     description: '',
@@ -63,35 +61,16 @@ export default function CreateRecipePage() {
     isVegan: false,
     isGlutenFree: false,
     isDairyFree: false,
-    isNutFree: false,
-    categoryId: ''
+    isNutFree: false
   })
   const supabase = createClient()
-
-  const fetchCategories = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name')
-
-      if (error) {
-        console.error('Error fetching categories:', error)
-      } else {
-        setCategories(data || [])
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error)
-    }
-  }, [supabase])
 
   useEffect(() => {
     if (!user) {
       router.push('/auth/signin')
       return
     }
-    fetchCategories()
-  }, [user, router, fetchCategories])
+  }, [user, router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
@@ -158,7 +137,7 @@ export default function CreateRecipePage() {
           is_dairy_free: formData.isDairyFree,
           is_nut_free: formData.isNutFree,
           author_id: user.id,
-          category_id: formData.categoryId || null
+          category_id: null
         })
         .select()
         .single()
@@ -311,25 +290,6 @@ export default function CreateRecipePage() {
                     <option value="easy">Easy</option>
                     <option value="medium">Medium</option>
                     <option value="hard">Hard</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 mb-1">
-                    Category
-                  </label>
-                  <select
-                    id="categoryId"
-                    name="categoryId"
-                    value={formData.categoryId}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  >
-                    <option value="">Select category</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.icon} {category.name}
-                      </option>
-                    ))}
                   </select>
                 </div>
               </div>

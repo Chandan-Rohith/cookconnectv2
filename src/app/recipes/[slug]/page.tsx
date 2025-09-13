@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { RecipeWithDetails } from "@/types/database"
 import { 
-  Clock, Users, UtensilsCrossed, ArrowLeft 
+  Clock, Users, ArrowLeft 
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -169,7 +169,6 @@ export default function RecipeDetailPage() {
       <div className="flex flex-wrap gap-4 text-sm text-gray-500">
         <div className="flex items-center gap-1"><Clock size={16}/> {recipe.cook_time} mins</div>
         <div className="flex items-center gap-1"><Users size={16}/> {recipe.servings} servings</div>
-        <div className="flex items-center gap-1"><UtensilsCrossed size={16}/> {recipe.category?.name}</div>
       </div>
 
       {/* Description */}

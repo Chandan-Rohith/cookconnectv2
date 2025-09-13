@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { User } from '@supabase/supabase-js'
+import { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { Database } from '@/types/database'
 
@@ -21,9 +21,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  
+  // Only create client on the client side
+  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null)
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setSupabase(createClient())
+    }
+  }, [])
 
   const fetchProfile = useCallback(async (userId: string) => {
+    if (!supabase) return
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -43,6 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase])
 
   useEffect(() => {
+    if (!supabase) return
+    
     // Get initial session
     const getInitialSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -59,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
         setUser(session?.user ?? null)
         
         if (session?.user) {
@@ -73,15 +85,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, [fetchProfile, supabase.auth])
+  }, [fetchProfile, supabase])
 
   const refreshProfile = async () => {
-    if (user) {
-      await fetchProfile(user.id)
-    }
+    if (!supabase || !user) return
+    await fetchProfile(user.id)
   }
 
   const signOut = async () => {
+    if (!supabase) return
     await supabase.auth.signOut()
   }
 

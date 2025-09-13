@@ -74,16 +74,6 @@ export function getDifficultyColor(difficulty: 'easy' | 'medium' | 'hard') {
   }
 }
 
-export function extractYouTubeVideoId(url: string): string | null {
-  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
-  const match = url.match(regex)
-  return match ? match[1] : null
-}
-
-export function generateYouTubeThumbnail(videoId: string): string {
-  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
-}
-
 export function slugify(text: string): string {
   return text
     .toLowerCase()

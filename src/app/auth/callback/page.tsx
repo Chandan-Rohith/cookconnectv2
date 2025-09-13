@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ChefHat } from 'lucide-react'
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic'
+
 export default function AuthCallbackPage() {
   const router = useRouter()
   const supabase = createClient()

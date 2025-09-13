@@ -1,5 +1,8 @@
 'use client'
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect, useCallback } from 'react'
 import Navigation from '@/components/Navigation'
 import RecipeCard from '@/components/RecipeCard'

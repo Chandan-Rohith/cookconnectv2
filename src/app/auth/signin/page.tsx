@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChefHat, Eye, EyeOff } from 'lucide-react'
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic'
+
 export default function SignInPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

@@ -5,10 +5,10 @@ import Link from 'next/link'
 import Image from 'next/image'; 
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 
-import { Heart, Clock, Users, Star, UtensilsCrossed, Eye, ChefHat, Play,} from 'lucide-react'
+import { Heart, Clock, Users, Star, UtensilsCrossed, Eye, ChefHat } from 'lucide-react'
 
 import { RecipeWithDetails } from '@/types/database'
-import { formatDuration, formatRelativeTime, getDifficultyColor, extractYouTubeVideoId, generateYouTubeThumbnail } from '@/lib/utils'
+import { formatDuration, formatRelativeTime, getDifficultyColor } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 
@@ -78,13 +78,6 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
       return recipe.image_url
     }
     
-    if (recipe.youtube_url) {
-      const videoId = extractYouTubeVideoId(recipe.youtube_url)
-      if (videoId) {
-        return generateYouTubeThumbnail(videoId)
-      }
-    }
-    
     return '/placeholder-recipe.svg'
   }
 
@@ -103,13 +96,6 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
             className="object-cover group-hover:scale-105 transition-transform duration-200"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          {recipe.youtube_url && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="bg-black bg-opacity-50 rounded-full p-3">
-                <Play className="h-8 w-8 text-white" />
-              </div>
-            </div>
-          )}
           {recipe.difficulty && (
             <div className="absolute top-2 left-2">
               <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(recipe.difficulty)}`}>

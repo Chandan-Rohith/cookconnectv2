@@ -1,5 +1,8 @@
 'use client'
 
+// Disable static generation for this page
+export const dynamic = 'force-dynamic'
+
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
@@ -32,7 +35,6 @@ interface RecipeFormData {
   servings: string
   difficulty: 'easy' | 'medium' | 'hard' | ''
   imageUrl: string
-  youtubeUrl: string
   isPublic: boolean
   isVegetarian: boolean
   isVegan: boolean
@@ -55,7 +57,6 @@ export default function CreateRecipePage() {
     servings: '',
     difficulty: '',
     imageUrl: '',
-    youtubeUrl: '',
     isPublic: true,
     isVegetarian: false,
     isVegan: false,
@@ -129,7 +130,6 @@ export default function CreateRecipePage() {
           servings: formData.servings ? parseInt(formData.servings) : null,
           difficulty: formData.difficulty || null,
           image_url: formData.imageUrl || null,
-          youtube_url: formData.youtubeUrl || null,
           is_public: formData.isPublic,
           is_vegetarian: formData.isVegetarian,
           is_vegan: formData.isVegan,
@@ -391,7 +391,7 @@ export default function CreateRecipePage() {
             <CardHeader>
               <CardTitle>Media</CardTitle>
               <CardDescription>
-                Add images or videos to your recipe
+                Add an image to your recipe
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -405,18 +405,6 @@ export default function CreateRecipePage() {
                   value={formData.imageUrl}
                   onChange={handleInputChange}
                   placeholder="https://example.com/recipe-image.jpg"
-                />
-              </div>
-              <div>
-                <label htmlFor="youtubeUrl" className="block text-sm font-medium text-gray-700 mb-1">
-                  YouTube Video URL
-                </label>
-                <Input
-                  id="youtubeUrl"
-                  name="youtubeUrl"
-                  value={formData.youtubeUrl}
-                  onChange={handleInputChange}
-                  placeholder="https://youtube.com/watch?v=..."
                 />
               </div>
             </CardContent>

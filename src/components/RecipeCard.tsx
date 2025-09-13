@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'; 
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-import { Heart, Clock, Users, Star, UtensilsCrossed, Eye, ChefHat } from 'lucide-react'
+import { Heart, Clock, Users, Star, UtensilsCrossed, Eye, ChefHat, X, Plus } from 'lucide-react'
 
 import { RecipeWithDetails } from '@/types/database'
 import { formatDuration, formatRelativeTime, getDifficultyColor, generateRecipeSlug } from '@/lib/utils'
@@ -23,6 +25,10 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
   const [isLiked, setIsLiked] = useState(recipe.is_liked || false)
   const [likeCount, setLikeCount] = useState(recipe.like_count)
   const [loading, setLoading] = useState(false)
+  const [showCollectionModal, setShowCollectionModal] = useState(false)
+  const [collections, setCollections] = useState<Array<{id: string, name: string}>>([])
+  const [newCollectionName, setNewCollectionName] = useState('')
+  const [creatingNew, setCreatingNew] = useState(false)
   const supabase = createClient()
 
   const handleLike = async (e: React.MouseEvent) => {
@@ -73,71 +79,88 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
     }
   }
 
-  const handleAddToCollection = async (e: React.MouseEvent) => {
+  const fetchUserCollections = async () => {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase
+        .from('recipe_collections')
+        .select('id, name')
+        .eq('user_id', user.id)
+        .order('name')
+
+      if (error) throw error
+      setCollections(data || [])
+    } catch (error) {
+      console.error('Error fetching collections:', error)
+    }
+  }
+
+  const handleShowCollectionModal = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     
     if (!user) {
-      // Redirect to sign in
       window.location.href = '/auth/signin'
       return
     }
 
-    setLoading(true)
-    
+    await fetchUserCollections()
+    setShowCollectionModal(true)
+  }
+
+  const addToCollection = async (collectionId: string) => {
+    if (!recipe || !user) return
+
     try {
-      // First, try to find or create a "Saved Recipes" collection
-      const { data: collections, error: fetchError } = await supabase
-        .from('recipe_collections')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('name', 'Saved Recipes')
-        .single()
-
-      let savedCollection = collections
-
-      if (fetchError && fetchError.code === 'PGRST116') {
-        // Collection doesn't exist, create it
-        const { data: newCollection, error: createError } = await supabase
-          .from('recipe_collections')
-          .insert({
-            name: 'Saved Recipes',
-            description: 'Automatically saved recipes',
-            user_id: user.id,
-            is_public: false
-          })
-          .select('id')
-          .single()
-
-        if (createError) throw createError
-        savedCollection = newCollection
-      } else if (fetchError) {
-        throw fetchError
-      }
-
-      if (!savedCollection?.id) throw new Error('Failed to get collection ID')
-
-      // Now add the recipe to the collection
-      const { error: addError } = await supabase
+      const { error } = await supabase
         .from('collection_recipes')
         .insert({
-          collection_id: savedCollection.id,
+          collection_id: collectionId,
           recipe_id: recipe.id
         })
 
-      if (addError) {
-        if (addError.code === '23505') { // Unique constraint violation
-          alert('Recipe is already saved!')
+      if (error) {
+        if (error.code === '23505') {
+          alert('Recipe is already in this collection!')
           return
         }
-        throw addError
+        throw error
       }
 
-      alert('Recipe saved to collection!')
-      
+      alert('Recipe added to collection successfully!')
+      setShowCollectionModal(false)
     } catch (error) {
       console.error('Error adding to collection:', error)
-      alert('Failed to save recipe. Please try again.')
+      alert('Error adding recipe to collection')
+    }
+  }
+
+  const createNewCollection = async () => {
+    if (!newCollectionName.trim() || !user) return
+
+    setLoading(true)
+    try {
+      const { data: newCollection, error } = await supabase
+        .from('recipe_collections')
+        .insert({
+          name: newCollectionName.trim(),
+          description: `Collection created for ${recipe.title}`,
+          user_id: user.id,
+          is_public: false
+        })
+        .select('id')
+        .single()
+
+      if (error) throw error
+
+      // Add recipe to the new collection
+      await addToCollection(newCollection.id)
+      setNewCollectionName('')
+      setCreatingNew(false)
+    } catch (error) {
+      console.error('Error creating collection:', error)
+      alert('Failed to create collection. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -253,7 +276,7 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
             </button>
             
             <button
-              onClick={handleAddToCollection}
+              onClick={handleShowCollectionModal}
               disabled={loading}
               className="flex items-center gap-1 text-sm text-gray-500 hover:text-orange-500 transition-colors disabled:opacity-50"
               title="Add recipe to collection"
@@ -276,6 +299,85 @@ export default function RecipeCard({ recipe, showAuthor = true, onLike }: Recipe
         </div>
 
       </CardContent>
+
+      {/* Collection Modal */}
+      {showCollectionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setShowCollectionModal(false)}>
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Add to Collection</h2>
+              <button 
+                onClick={() => setShowCollectionModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Existing Collections */}
+            {collections.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Choose existing collection:</h3>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {collections.map((collection) => (
+                    <button
+                      key={collection.id}
+                      onClick={() => addToCollection(collection.id)}
+                      className="w-full text-left p-2 rounded border hover:bg-gray-50 transition-colors"
+                    >
+                      {collection.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Create New Collection */}
+            <div className="border-t pt-4">
+              {!creatingNew ? (
+                <button
+                  onClick={() => setCreatingNew(true)}
+                  className="flex items-center gap-2 text-orange-500 hover:text-orange-600 font-medium"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create New Collection
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium text-gray-700">Create new collection:</h3>
+                  <Input
+                    type="text"
+                    placeholder="Collection name"
+                    value={newCollectionName}
+                    onChange={(e) => setNewCollectionName(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && createNewCollection()}
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={createNewCollection}
+                      disabled={!newCollectionName.trim() || loading}
+                      size="sm"
+                    >
+                      {loading ? 'Creating...' : 'Create & Add'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setCreatingNew(false)
+                        setNewCollectionName('')
+                      }}
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   )
 }
